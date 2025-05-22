@@ -21,6 +21,10 @@ extern "C"
         ble_provisioning,
     };
 
+    // Getter
+    Wifi_conn_state wifi_manager_get_connection_state();
+
+    // Wi-Fi event group
     void wifi_manager_trigger_init();
     void wifi_manager_trigger_deinit();
     void wifi_manager_trigger_connect();

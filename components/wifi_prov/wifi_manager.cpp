@@ -13,12 +13,12 @@
 
 enum Wifi_Events
 {
-    WIFI_EVENT_START_INITIALIZATION = 1 << 0,
-    WIFI_EVENT_START_CONNECTING = 1 << 1,
+    WIFI_EVENT_INIT = 1 << 0,
+    WIFI_EVENT_CONNECT = 1 << 1,
     WIFI_EVENT_CONNECTION_FAILED = 1 << 2,
     WIFI_EVENT_CONNECTION_SUCCESS = 1 << 3,
-    WIFI_EVENT_START_DISCONNECTING = 1 << 4,
-    WIFI_EVENT_START_DEINIT = 1 << 5,
+    WIFI_EVENT_DISCONNECT = 1 << 4,
+    WIFI_EVENT_DEINIT = 1 << 5,
     WIFI_EVENT_BLE_PROV_ENDED = 1 << 6,
 };
 
@@ -51,24 +51,30 @@ static void wifi_run_ble_prov_worker(void *params);
 static void wifi_stop_ble_prov_worker(void *params);
 
 // INTERFACE
+
+Wifi_conn_state wifi_manager_get_connection_state()
+{
+    return con_state;
+}
+
 void wifi_manager_trigger_init()
 {
-    xEventGroupSetBits(wifi_events, WIFI_EVENT_START_INITIALIZATION);
+    xEventGroupSetBits(wifi_events, WIFI_EVENT_INIT);
 }
 
 void wifi_manager_trigger_deinit()
 {
-    xEventGroupSetBits(wifi_events, WIFI_EVENT_START_DEINIT);
+    xEventGroupSetBits(wifi_events, WIFI_EVENT_DEINIT);
 }
 
 void wifi_manager_trigger_connect()
 {
-    xEventGroupSetBits(wifi_events, WIFI_EVENT_START_CONNECTING);
+    xEventGroupSetBits(wifi_events, WIFI_EVENT_CONNECT);
 }
 
 void wifi_manager_trigger_disconnect()
 {
-    xEventGroupSetBits(wifi_events, WIFI_EVENT_START_DISCONNECTING);
+    xEventGroupSetBits(wifi_events, WIFI_EVENT_DISCONNECT);
 }
 
 void wifi_manager_task(void *params)
@@ -84,7 +90,7 @@ void wifi_manager_task(void *params)
             ESP_LOGI(TAG, "Wi-Fi manager state: not initialized");
             xEventGroupWaitBits(
                 wifi_events,
-                WIFI_EVENT_START_INITIALIZATION,
+                WIFI_EVENT_INIT,
                 pdTRUE,       // clear on exit
                 pdFALSE,      // wait for any bit
                 portMAX_DELAY // block forever
@@ -100,18 +106,18 @@ void wifi_manager_task(void *params)
             ESP_LOGI(TAG, "Wi-Fi manager state: disconnected");
             EventBits_t event_bits = xEventGroupWaitBits(
                 wifi_events,
-                WIFI_EVENT_START_CONNECTING | WIFI_EVENT_START_DEINIT,
+                WIFI_EVENT_CONNECT | WIFI_EVENT_DEINIT,
                 pdTRUE,       // clear on exit
                 pdFALSE,      // wait for any bit
                 portMAX_DELAY // block forever
             );
-            if (event_bits & WIFI_EVENT_START_DEINIT)
+            if (event_bits & WIFI_EVENT_DEINIT)
             {
                 xTaskCreate(wifi_deinit_worker, "wifi_deinit_worker", 4096, wifi_init_task_handle, 5, NULL);
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 con_state = Wifi_conn_state::not_initialized;
             }
-            else if (event_bits & WIFI_EVENT_START_CONNECTING)
+            else if (event_bits & WIFI_EVENT_CONNECT)
             {
                 con_state = Wifi_conn_state::connecting;
             }
@@ -150,7 +156,7 @@ void wifi_manager_task(void *params)
                     WIFI_EVENT_CONNECTION_FAILED | WIFI_EVENT_CONNECTION_SUCCESS,
                     pdTRUE,              // clear on exit
                     pdFALSE,             // wait for any bit
-                    pdMS_TO_TICKS(10000) // block 10s
+                    pdMS_TO_TICKS(15000) // block 15s
                 );
                 if (event_bits & WIFI_EVENT_CONNECTION_SUCCESS)
                 {
@@ -217,7 +223,7 @@ void wifi_manager_task(void *params)
             ESP_LOGI(TAG, "Wi-Fi manager state: connected");
             xEventGroupWaitBits(
                 wifi_events,
-                WIFI_EVENT_START_DISCONNECTING,
+                WIFI_EVENT_DISCONNECT,
                 pdTRUE,       // clear on exit
                 pdFALSE,      // wait for any bit
                 portMAX_DELAY // block forever

@@ -18,20 +18,48 @@ extern "C"
         wifi_manager_trigger_init();
         wifi_manager_trigger_connect();
 
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        while (wifi_manager_get_connection_state() != Wifi_conn_state::connected)
+        {
+            // ESP_LOGI(TAG, "Waiting for Wi-Fi connection...");
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        ESP_LOGI(TAG, "****************** WIFI CONNECTED ******************\n\n");
 
         wifi_manager_trigger_disconnect();
-        vTaskDelay(pdMS_TO_TICKS(10000));
-        wifi_manager_trigger_deinit();
+        while (wifi_manager_get_connection_state() != Wifi_conn_state::disconnected)
+        {
+            // ESP_LOGI(TAG, "Waiting for Wi-Fi disconnection...");
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        ESP_LOGI(TAG, "****************** WIFI DISCONNECTED ******************\n\n");
 
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        wifi_manager_trigger_deinit();
+        while (wifi_manager_get_connection_state() != Wifi_conn_state::not_initialized)
+        {
+            // ESP_LOGI(TAG, "Waiting for Wi-Fi connection...");
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        ESP_LOGI(TAG, "****************** WIFI DEINITIALIZED ******************\n\n");
 
         wifi_manager_trigger_init();
-        vTaskDelay(pdMS_TO_TICKS(10000));
+        while (wifi_manager_get_connection_state() != Wifi_conn_state::disconnected)
+        {
+            // ESP_LOGI(TAG, "Waiting for Wi-Fi init");
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        ESP_LOGI(TAG, "****************** WIFI INITIALIZED ******************\n\n");
+
         wifi_manager_trigger_connect();
+        while (wifi_manager_get_connection_state() != Wifi_conn_state::connected)
+        {
+            // ESP_LOGI(TAG, "Waiting for Wi-Fi connection...");
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        ESP_LOGI(TAG, "****************** WIFI CONNECTED ******************\n\n");
 
         while (true)
         {
+            ESP_LOGI(TAG, "Wi-Fi connected. Running main loop...");
             vTaskDelay(portMAX_DELAY);
         }
     }
