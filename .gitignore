@@ -1,0 +1,42 @@
+# vscode
+**/.vscode
+
+
+# PlatformIO
+.pio/
+*.elf
+*.bin
+*.map
+*.hex
+
+# PlatformIO build flags/IDE configs
+platformio.ini.save
+
+# CMake & IDF-generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+build/
+*.log
+
+# ESP-IDF config
+sdkconfig.*
+!sdkconfig.defaults
+
+# OS and IDE junk
+*.DS_Store
+*.swp
+*.swo
+*.user
+*.bak
+*.tmp
+*.orig
+
+# Test/build output
+test/*.o
+test/*.gcda
+test/*.gcno
+test/*.gcov
+
+# Backup files
+*.~*
